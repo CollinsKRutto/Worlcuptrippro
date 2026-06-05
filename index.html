@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WC Trip Pro – World Cup 2026 Planner & Budget Saver</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- ⚠️ Replace YOUR_PAYPAL_CLIENT_ID with your real PayPal Client ID -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AVAd3eaZT1HqpORXGN2mtE0bGTXbk57CBgdv8g9PFipPPqpVt8Z3oWAAhae8EfeYqJL6JeHulb-FLInV&currency=USD"></script>
+
+  <style>
+    :root {
+      --bg:#0a0f0d;--surface:#111a14;--surface2:#172010;--border:#2a3d28;
+      --gold:#f5c518;--green:#22c55e;--green-dk:#16a34a;--red:#ef4444;
+      --text:#e8ede9;--muted:#8a9e8c;--card-bg:#131f15;--premium:#f59e0b;
+    }
+    [data-theme="light"] {
+      --bg:#f0f4f1;--surface:#ffffff;--surface2:#e8f0ea;--border:#c8d8ca;
+      --text:#0d1f10;--muted:#4a6b4d;--card-bg:#ffffff;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background-color:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:400;line-height:1.6;min-height:100vh;}
+    .font-display{font-family:'Syne',sans-serif;font-weight:800;}
+    .font-display-md{font-family:'Syne',sans-serif;font-weight:700;}
+
+    .hero-bg{
+      background:
+        repeating-linear-gradient(0deg,transparent,transparent 58px,rgba(34,197,94,0.04) 58px,rgba(34,197,94,0.04) 60px),
+        repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(34,197,94,0.04) 58px,rgba(34,197,94,0.04) 60px),
+        radial-gradient(ellipse 80% 60% at 50% 0%,rgba(22,163,74,0.18) 0%,transparent 70%),
+        var(--bg);
+    }
+
+    /* CARDS — no pointer-events interference */
+    .card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;transition:border-color 0.2s,box-shadow 0.2s;}
+    .card:hover{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 8px 32px rgba(34,197,94,0.08);}
+    .card-premium{background:linear-gradient(135deg,#1a1205 0%,#141f0d 100%);border:1px solid var(--premium);border-radius:16px;}
+
+    /* BUTTONS — all explicitly clickable */
+    .btn-primary{background:var(--green);color:#0a0f0d;font-family:'Syne',sans-serif;font-weight:700;border-radius:10px;padding:12px 28px;transition:background 0.2s,transform 0.1s,box-shadow 0.2s;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1;}
+    .btn-primary:hover{background:var(--green-dk);box-shadow:0 4px 20px rgba(34,197,94,0.3);transform:translateY(-1px);}
+    .btn-premium{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0f0d;font-family:'Syne',sans-serif;font-weight:700;border-radius:10px;padding:14px 32px;cursor:pointer;border:none;transition:box-shadow 0.2s,transform 0.1s;display:inline-flex;align-items:center;gap:8px;position:relative;z-index:1;}
+    .btn-premium:hover{box-shadow:0 6px 28px rgba(245,158,11,0.4);transform:translateY(-1px);}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;border-radius:10px;padding:10px 20px;cursor:pointer;transition:border-color 0.2s,background 0.2s;position:relative;z-index:1;}
+    .btn-ghost:hover{border-color:var(--green);background:rgba(34,197,94,0.08);}
+
+    /* FORM */
+    .input-field{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;width:100%;font-family:'DM Sans',sans-serif;font-size:14px;transition:border-color 0.2s;}
+    .input-field:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 2px rgba(34,197,94,0.15);}
+    select.input-field option{background:var(--surface);color:var(--text);}
+
+    /* MATCH CARDS — only match cards block child pointer events */
+    .match-card{user-select:none;-webkit-user-select:none;cursor:pointer;position:relative;border-radius:12px;border:2px solid var(--border);background:var(--surface);transition:all 0.2s;overflow:hidden;}
+    .match-card>*{pointer-events:none;}
+    .match-card.selected{border-color:var(--green);background:rgba(34,197,94,0.07);box-shadow:0 0 0 1px var(--green);}
+    .match-card .check-badge{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--green);display:none;align-items:center;justify-content:center;font-size:12px;}
+    .match-card.selected .check-badge{display:flex;}
+
+    /* TIER CARDS — must be fully clickable */
+    .tier-card{cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;}
+    .tier-card:hover{box-shadow:0 4px 20px rgba(245,158,11,0.2);}
+
+    /* PROGRESS STEPS */
+    .step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;background:var(--surface2);border:2px solid var(--border);color:var(--muted);transition:all 0.3s;}
+    .step-dot.active{background:var(--green);border-color:var(--green);color:#0a0f0d;}
+    .step-dot.done{background:var(--green-dk);border-color:var(--green-dk);color:#fff;}
+    .step-line{height:2px;flex:1;background:var(--border);transition:background 0.3s;}
+    .step-line.done{background:var(--green-dk);}
+
+    /* COST BARS */
+    .cost-bar-wrap{background:var(--surface2);border-radius:8px;overflow:hidden;height:10px;}
+    .cost-bar{height:10px;border-radius:8px;background:var(--green);transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+    .cost-bar.red{background:var(--red);}
+    .cost-bar.gold{background:var(--gold);}
+    .cost-bar.amber{background:var(--premium);}
+
+    /* BADGES */
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;}
+    .badge-green{background:rgba(34,197,94,0.15);color:var(--green);}
+    .badge-gold{background:rgba(245,197,24,0.15);color:var(--gold);}
+    .badge-amber{background:rgba(245,158,11,0.15);color:var(--premium);}
+    .badge-red{background:rgba(239,68,68,0.15);color:var(--red);}
+    .badge-blue{background:rgba(96,165,250,0.15);color:#60a5fa;}
+
+    .glow-line{height:3px;width:100%;background:linear-gradient(90deg,transparent,var(--green),var(--gold),var(--green),transparent);border-radius:99px;opacity:0.7;}
+
+    .fade-in{animation:fadeInUp 0.5s ease forwards;opacity:0;}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+    .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;}
+
+    .blur-lock{filter:blur(4px);pointer-events:none;user-select:none;}
+
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+    .nav-link{color:var(--muted);font-size:14px;font-weight:500;transition:color 0.2s;cursor:pointer;}
+    .nav-link:hover{color:var(--text);}
+
+    /* PayPal container needs z-index to render buttons */
+    #paypal-button-container{position:relative;z-index:1;min-height:50px;}
+
+    /* Premium upsell section — ensure all children are clickable */
+    #premium-upsell *{pointer-events:auto;}
+
+    @media print{.no-print{display:none !important;}body{background:white;color:black;}}
+  </style>
+
+  <script>
+    tailwind.config={theme:{extend:{colors:{field:'#0a0f0d',surface:'#111a14',green:{DEFAULT:'#22c55e',dark:'#16a34a'},gold:'#f5c518',premium:'#f59e0b'}}}}
+  </script>
+</head>
+<body class="hero-bg">
+
+<!-- NAV -->
+<nav class="no-print sticky top-0 z-50 border-b" style="background:rgba(10,15,13,0.92);border-color:var(--border);backdrop-filter:blur(12px);">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2 cursor-pointer" onclick="showPage('home')">
+      <span class="text-2xl">⚽</span>
+      <span class="font-display text-base" style="color:var(--text);">WC Trip <span style="color:var(--green);">Pro</span></span>
+    </div>
+    <div class="hidden md:flex items-center gap-6">
+      <span class="nav-link" onclick="showPage('home')">Plan a Trip</span>
+      <span class="nav-link" onclick="showPage('myplans')">My Plans</span>
+      <span class="nav-link" onclick="showPage('schedule')">2026 Schedule</span>
+      <span class="nav-link" onclick="showPage('tips')">Savings Tips</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="toggleTheme()" class="btn-ghost text-sm px-3 py-2"><span id="theme-icon">☀️</span></button>
+      <span id="nav-premium-badge" class="badge badge-amber hidden">⭐ Premium</span>
+      <button onclick="toggleMobileMenu()" class="btn-ghost text-sm px-3 py-2 md:hidden">☰</button>
+    </div>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden px-4 pb-3 flex flex-col gap-2 border-t" style="border-color:var(--border);">
+    <span class="nav-link py-2" onclick="showPage('home');toggleMobileMenu()">🗺️ Plan a Trip</span>
+    <span class="nav-link py-2" onclick="showPage('myplans');toggleMobileMenu()">📋 My Plans</span>
+    <span class="nav-link py-2" onclick="showPage('schedule');toggleMobileMenu()">📅 2026 Schedule</span>
+    <span class="nav-link py-2" onclick="showPage('tips');toggleMobileMenu()">💰 Savings Tips</span>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-4 pb-16">
+
+  <!-- PAGE: HOME -->
+  <div id="page-home" class="page">
+    <section class="py-12 text-center">
+      <div class="inline-flex items-center gap-2 badge badge-green mb-4">🏆 FIFA World Cup 2026 · June 11 – July 19</div>
+      <h1 class="font-display text-4xl md:text-6xl leading-tight mb-4" style="color:var(--text);">Plan Your Dream<br/><span style="color:var(--green);">World Cup Trip.</span></h1>
+      <p class="text-lg max-w-xl mx-auto mb-8" style="color:var(--muted);">Save hundreds with a personalized itinerary, real 2026 match data, daily schedules, and budget breakdowns — built for fans.</p>
+      <div class="flex flex-wrap gap-3 justify-center mb-4">
+        <div class="badge badge-amber">⭐ Free + Premium Plans</div>
+        <div class="badge badge-blue">🌎 USA · Canada · Mexico</div>
+        <div class="badge badge-gold">💰 Save up to $800</div>
+      </div>
+    </section>
+
+    <div class="glow-line mb-10"></div>
+
+    <!-- PROGRESS -->
+    <div class="no-print flex items-center justify-center gap-2 mb-10">
+      <div class="flex flex-col items-center gap-1"><div class="step-dot active" id="step1">1</div><span class="text-xs" style="color:var(--muted);">Select Matches</span></div>
+      <div class="step-line" id="line1"></div>
+      <div class="flex flex-col items-center gap-1"><div class="step-dot" id="step2">2</div><span class="text-xs" style="color:var(--muted);">Your Details</span></div>
+      <div class="step-line" id="line2"></div>
+      <div class="flex flex-col items-center gap-1"><div class="step-dot" id="step3">3</div><span class="text-xs" style="color:var(--muted);">Your Plan</span></div>
+    </div>
+
+    <!-- STEP 1: MATCHES -->
+    <div id="section-matches">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-display-md text-2xl">⚽ Select Matches</h2>
+        <span class="text-sm" style="color:var(--muted);">Free: up to <strong>3</strong> · <span style="color:var(--premium);">Premium: unlimited</span></span>
+      </div>
+      <div class="flex flex-wrap gap-3 mb-5">
+        <select class="input-field" style="max-width:180px;" id="filter-country" onchange="filterMatches()">
+          <option value="">🌍 All Teams</option>
+          <option value="USA">🇺🇸 USA</option>
+          <option value="Canada">🇨🇦 Canada</option>
+          <option value="Mexico">🇲🇽 Mexico</option>
+          <option value="Brazil">🇧🇷 Brazil</option>
+          <option value="Argentina">🇦🇷 Argentina</option>
+          <option value="England">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</option>
+        </select>
+        <select class="input-field" style="max-width:160px;" id="filter-city" onchange="filterMatches()">
+          <option value="">🏙️ All Cities</option>
+          <option value="New York">New York</option>
+          <option value="Los Angeles">Los Angeles</option>
+          <option value="Dallas">Dallas</option>
+          <option value="Miami">Miami</option>
+          <option value="Atlanta">Atlanta</option>
+          <option value="Houston">Houston</option>
+          <option value="Seattle">Seattle</option>
+          <option value="San Francisco">San Francisco</option>
+          <option value="Kansas City">Kansas City</option>
+          <option value="Boston">Boston</option>
+          <option value="Philadelphia">Philadelphia</option>
+          <option value="Vancouver">Vancouver</option>
+          <option value="Toronto">Toronto</option>
+          <option value="Guadalajara">Guadalajara</option>
+          <option value="Mexico City">Mexico City</option>
+          <option value="Monterrey">Monterrey</option>
+        </select>
+        <button onclick="clearMatchSelection()" class="btn-ghost text-sm">🗑️ Clear</button>
+      </div>
+      <div id="match-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"></div>
+      <div id="match-summary" class="card p-4 mb-6" style="display:none;">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="font-display-md text-lg">Selected:</span>
+          <span id="selected-count" class="badge badge-green">0</span>
+          <span id="free-limit-warning" class="badge badge-amber hidden">⚠️ Free plan limit (3 matches).</span>
+          <button onclick="scrollToEl('section-details')" class="btn-primary ml-auto">Continue →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: DETAILS -->
+    <div id="section-details" class="card p-6 mb-6">
+      <h2 class="font-display-md text-2xl mb-5">🎒 Your Trip Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-medium mb-1" style="color:var(--muted);">Your Name</label>
+          <input type="text" id="inp-name" class="input-field" placeholder="e.g. Marcus Osei" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" style="color:var(--muted);">Home City / Country</label>
+          <input type="text" id="inp-home" class="input-field" placeholder="e.g. Nairobi, Kenya" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" style="color:var(--muted);">Number of Travellers</label>
+          <select id="inp-travellers" class="input-field">
+            <option value="1">1 — Solo Fan</option>
+            <option value="2" selected>2 — Couple/Friends</option>
+            <option value="3">3 People</option>
+            <option value="4">4 People</option>
+            <option value="6">6+ Group</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" style="color:var(--muted);">Budget Style</label>
+          <select id="inp-budget" class="input-field">
+            <option value="budget">🎒 Budget — Hostel/Airbnb</option>
+            <option value="mid" selected>🏨 Mid-Range — 3-star hotels</option>
+            <option value="luxury">💎 Luxury — 5-star</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" style="color:var(--muted);">Preferred Transport</label>
+          <select id="inp-transport" class="input-field">
+            <option value="flight">✈️ Fly between cities</option>
+            <option value="drive" selected>🚗 Drive / Rent a car</option>
+            <option value="train">🚆 Trains / Greyhound</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" style="color:var(--muted);">Ticket Category</label>
+          <select id="inp-ticket" class="input-field">
+            <option value="cat3">Cat 3 — ~$100–$200</option>
+            <option value="cat2" selected>Cat 2 — ~$200–$400</option>
+            <option value="cat1">Cat 1 — ~$400–$800</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-5">
+        <label class="block text-sm font-medium mb-1" style="color:var(--muted);">Favourite Team (for What-If simulator)</label>
+        <select id="inp-team" class="input-field" style="max-width:280px;">
+          <option value="">— None / Neutral Fan —</option>
+          <option value="USA">🇺🇸 USA</option><option value="Canada">🇨🇦 Canada</option>
+          <option value="Mexico">🇲🇽 Mexico</option><option value="Brazil">🇧🇷 Brazil</option>
+          <option value="Argentina">🇦🇷 Argentina</option><option value="England">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</option>
+          <option value="France">🇫🇷 France</option><option value="Germany">🇩🇪 Germany</option>
+          <option value="Spain">🇪🇸 Spain</option><option value="Portugal">🇵🇹 Portugal</option>
+          <option value="Nigeria">🇳🇬 Nigeria</option><option value="South Africa">🇿🇦 South Africa</option>
+          <option value="Morocco">🇲🇦 Morocco</option><option value="Senegal">🇸🇳 Senegal</option>
+          <option value="Japan">🇯🇵 Japan</option><option value="South Korea">🇰🇷 South Korea</option>
+        </select>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button onclick="generatePlan()" class="btn-primary text-base px-8 py-3">🚀 Generate My Free Plan</button>
+        <span class="text-sm self-center" style="color:var(--muted);">Takes ~2 seconds</span>
+      </div>
+    </div>
+
+    <!-- STEP 3: RESULTS -->
+    <div id="section-results" style="display:none;">
+
+      <div class="card p-6 mb-5 fade-in">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div class="badge badge-green mb-2">✅ Plan Generated</div>
+            <h2 class="font-display text-3xl" id="plan-title">Your World Cup Plan</h2>
+            <p class="text-sm mt-1" id="plan-subtitle" style="color:var(--muted);"></p>
+          </div>
+          <div class="flex gap-2 no-print">
+            <button onclick="savePlan()" class="btn-ghost text-sm">💾 Save Plan</button>
+            <button id="btn-share" onclick="shareCard()" class="btn-ghost text-sm hidden">🔗 Share</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="cost-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 fade-in"></div>
+
+      <div class="card p-6 mb-5 fade-in">
+        <h3 class="font-display-md text-xl mb-4">💸 Cost Breakdown</h3>
+        <div id="cost-breakdown" class="space-y-4"></div>
+      </div>
+
+      <div class="card p-6 mb-5 fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-display-md text-xl">📅 Daily Itinerary</h3>
+          <span id="itinerary-limit-note" class="badge badge-amber text-xs hidden">Free: 3 days shown</span>
+        </div>
+        <div id="itinerary-list" class="space-y-4"></div>
+      </div>
+
+      <div class="card p-6 mb-5 fade-in">
+        <div class="flex items-center gap-3 mb-4">
+          <h3 class="font-display-md text-xl">🔮 What-If Knockout Simulator</h3>
+          <span id="whatif-premium-badge" class="badge badge-amber">⭐ Premium</span>
+        </div>
+        <div id="whatif-content"></div>
+      </div>
+
+      <div class="card p-6 mb-5 fade-in">
+        <h3 class="font-display-md text-xl mb-4">💡 Personalized Savings Tips</h3>
+        <div id="savings-tips" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </div>
+
+      <!-- PREMIUM UPSELL — all children explicitly pointer-events:auto via CSS -->
+      <div id="premium-upsell" class="card-premium p-8 mb-5 fade-in">
+        <div class="text-center mb-6">
+          <div class="text-5xl mb-3">⭐</div>
+          <h3 class="font-display text-3xl mb-2" style="color:var(--premium);">Unlock Premium Plan</h3>
+          <p style="color:var(--muted);">Full itinerary, PDF export, unlimited matches & more.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="rounded-xl p-5" style="background:var(--surface);">
+            <div class="font-display-md text-lg mb-3" style="color:var(--muted);">Free</div>
+            <ul class="space-y-2 text-sm">
+              <li>✅ Up to 3 match itinerary</li><li>✅ Basic cost estimate</li>
+              <li>✅ Savings tips</li><li>❌ Full daily schedule</li>
+              <li>❌ Knockout What-If simulator</li><li>❌ PDF export</li>
+              <li>❌ Multiple saved plans</li><li>❌ Shareable trip card</li>
+            </ul>
+          </div>
+          <div class="rounded-xl p-5" style="background:rgba(245,158,11,0.08);border:1px solid var(--premium);">
+            <div class="font-display-md text-lg mb-3" style="color:var(--premium);">⭐ Premium</div>
+            <ul class="space-y-2 text-sm">
+              <li>✅ Unlimited matches</li><li>✅ Full daily schedule</li>
+              <li>✅ Knockout What-If simulator</li>
+              <li style="color:var(--premium);">✅ <strong>PDF export</strong></li>
+              <li style="color:var(--premium);">✅ <strong>Unlimited saved plans</strong></li>
+              <li>✅ Fan zone details</li>
+              <li style="color:var(--premium);">✅ <strong>Shareable trip card</strong></li>
+              <li>✅ Personalized packing list</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- TIER SELECTOR — plain divs with onclick, no pointer-events blocking -->
+        <div class="flex flex-wrap gap-4 justify-center mb-6">
+          <div id="tier-basic"
+               onclick="selectTier('basic')"
+               style="border:2px solid var(--premium);background:rgba(245,158,11,0.06);border-radius:12px;padding:20px;min-width:160px;text-align:center;cursor:pointer;">
+            <div class="font-display text-2xl" style="color:var(--premium);">$9.99</div>
+            <div class="text-sm font-medium mt-1">Single Trip</div>
+            <div class="text-xs mt-1" style="color:var(--muted);">All premium features for this plan</div>
+          </div>
+          <div id="tier-pro"
+               onclick="selectTier('pro')"
+               style="border:2px solid var(--border);border-radius:12px;padding:20px;min-width:160px;text-align:center;cursor:pointer;">
+            <div class="font-display text-2xl" style="color:var(--gold);">$14.99</div>
+            <div class="text-sm font-medium mt-1">Pro — Unlimited Plans</div>
+            <div class="text-xs mt-1" style="color:var(--muted);">All tournament access</div>
+          </div>
+        </div>
+
+        <!-- PayPal + Demo Button -->
+        <div style="max-width:380px;margin:0 auto;">
+          <div id="paypal-button-container"></div>
+          <div style="text-align:center;margin-top:16px;">
+            <button onclick="simulatePremiumUnlock()" class="btn-premium" style="width:100%;justify-content:center;font-size:16px;padding:16px 32px;">
+              ✨ Simulate Premium Unlock (Demo)
+            </button>
+            <p class="text-xs mt-2" style="color:var(--muted);">Demo only — real PayPal button appears above when Client ID is set</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREMIUM CONTENT -->
+      <div id="premium-content" style="display:none;">
+        <div class="card p-6 mb-5 fade-in" style="border-color:var(--premium);">
+          <div class="flex items-center gap-3 mb-4">
+            <h3 class="font-display-md text-xl">📋 Full Personalized Itinerary</h3>
+            <span class="badge badge-amber">⭐ Premium</span>
+          </div>
+          <div id="premium-itinerary" class="space-y-4"></div>
+        </div>
+        <div class="card p-6 mb-5 fade-in">
+          <h3 class="font-display-md text-xl mb-4">🎽 Packing List</h3>
+          <div id="packing-list" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+        </div>
+        <div class="card-premium p-6 mb-5 fade-in text-center">
+          <div class="text-4xl mb-3">📄</div>
+          <h3 class="font-display-md text-xl mb-2" style="color:var(--premium);">Export Your Plan as PDF</h3>
+          <p class="text-sm mb-4" style="color:var(--muted);">Download a beautifully formatted trip plan to print or share.</p>
+          <button onclick="exportPDF()" class="btn-premium">⬇️ Download PDF Plan</button>
+        </div>
+      </div>
+
+    </div><!-- /section-results -->
+  </div><!-- /page-home -->
+
+  <!-- PAGE: MY PLANS -->
+  <div id="page-myplans" class="page" style="display:none;">
+    <div class="py-8">
+      <h2 class="font-display text-3xl mb-2">📋 My Saved Plans</h2>
+      <p class="mb-6" style="color:var(--muted);">Plans are saved locally in your browser.</p>
+      <div id="saved-plans-list" class="space-y-4"></div>
+      <div id="no-plans-msg" class="card p-8 text-center" style="display:none;">
+        <div class="text-5xl mb-3">📭</div>
+        <p style="color:var(--muted);">No saved plans yet.</p>
+        <button onclick="showPage('home')" class="btn-primary mt-4">Create My First Plan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: SCHEDULE -->
+  <div id="page-schedule" class="page" style="display:none;">
+    <div class="py-8">
+      <h2 class="font-display text-3xl mb-2">📅 2026 World Cup Schedule</h2>
+      <p class="mb-6" style="color:var(--muted);">Key group stage matches across USA, Canada & Mexico.</p>
+      <div id="full-schedule" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: TIPS -->
+  <div id="page-tips" class="page" style="display:none;">
+    <div class="py-8">
+      <h2 class="font-display text-3xl mb-2">💰 Savings Tips</h2>
+      <p class="mb-6" style="color:var(--muted);">How to experience the World Cup without breaking the bank.</p>
+      <div id="tips-content" class="space-y-4"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- SHARE MODAL -->
+<div id="share-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box text-center">
+    <div class="font-display text-2xl mb-2" style="color:var(--green);">🎉 Your Trip Card</div>
+    <div id="share-card-content" class="card p-5 mb-4 text-left"></div>
+    <p class="text-sm mb-4" style="color:var(--muted);">Copy the link or take a screenshot!</p>
+    <div class="flex gap-3 justify-center">
+      <button onclick="closeShareModal()" class="btn-ghost">Close</button>
+      <button onclick="copyShareLink()" class="btn-primary">📋 Copy Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;min-width:240px;box-shadow:0 8px 40px rgba(0,0,0,0.4);">
+  <div id="toast-msg" class="text-sm font-medium"></div>
+</div>
+
+<script>
+// =====================================================
+// 1. MATCH DATA
+// =====================================================
+const MATCHES = [
+  {id:1,date:"Thu Jun 11",time:"8:00 PM ET",home:"Mexico",away:"South Africa",homeflag:"🇲🇽",awayflag:"🇿🇦",city:"Mexico City",stadium:"Estadio Azteca",country:"Mexico",group:"A",ticketCat1:650,ticketCat2:320,ticketCat3:150,hype:"Opening Match! 🎇",fanZone:"Zócalo Plaza Fan Festival"},
+  {id:2,date:"Fri Jun 12",time:"6:00 PM CT",home:"USA",away:"Serbia",homeflag:"🇺🇸",awayflag:"🇷🇸",city:"Dallas",stadium:"AT&T Stadium",country:"USA",group:"B",ticketCat1:550,ticketCat2:260,ticketCat3:120,hype:"USA Home Opener!",fanZone:"Dallas Live Fan Festival"},
+  {id:3,date:"Sat Jun 13",time:"3:00 PM ET",home:"Canada",away:"Netherlands",homeflag:"🇨🇦",awayflag:"🇳🇱",city:"Toronto",stadium:"BMO Field",country:"Canada",group:"C",ticketCat1:520,ticketCat2:250,ticketCat3:110,hype:"Canada's First Home WC Match!",fanZone:"Harbourfront Fan Zone"},
+  {id:4,date:"Sun Jun 14",time:"5:00 PM PT",home:"Brazil",away:"Croatia",homeflag:"🇧🇷",awayflag:"🇭🇷",city:"Los Angeles",stadium:"SoFi Stadium",country:"USA",group:"D",ticketCat1:700,ticketCat2:380,ticketCat3:160,hype:"🇧🇷 Brazil plays in LA!",fanZone:"LA Live Fan Zone"},
+  {id:5,date:"Mon Jun 15",time:"3:00 PM ET",home:"Argentina",away:"Saudi Arabia",homeflag:"🇦🇷",awayflag:"🇸🇦",city:"New York",stadium:"MetLife Stadium",country:"USA",group:"E",ticketCat1:750,ticketCat2:400,ticketCat3:180,hype:"🏆 Defending Champions!",fanZone:"Times Square Fan Fest"},
+  {id:6,date:"Tue Jun 16",time:"6:00 PM CT",home:"England",away:"Senegal",homeflag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",awayflag:"🇸🇳",city:"Houston",stadium:"NRG Stadium",country:"USA",group:"F",ticketCat1:500,ticketCat2:240,ticketCat3:110,hype:"Africa vs Europe 🌍",fanZone:"Discovery Green Fan Fest"},
+  {id:7,date:"Wed Jun 17",time:"4:00 PM PT",home:"France",away:"Morocco",homeflag:"🇫🇷",awayflag:"🇲🇦",city:"San Francisco",stadium:"Levi's Stadium",country:"USA",group:"G",ticketCat1:620,ticketCat2:310,ticketCat3:140,hype:"2022 Final rematch! 🔥",fanZone:"Mission Bay Fan Zone"},
+  {id:8,date:"Thu Jun 18",time:"6:00 PM ET",home:"Spain",away:"Nigeria",homeflag:"🇪🇸",awayflag:"🇳🇬",city:"Atlanta",stadium:"Mercedes-Benz Stadium",country:"USA",group:"H",ticketCat1:560,ticketCat2:280,ticketCat3:130,hype:"Super Eagles roar! 🦅",fanZone:"Centennial Park Fan Fest"},
+  {id:9,date:"Fri Jun 19",time:"5:00 PM CT",home:"Germany",away:"Japan",homeflag:"🇩🇪",awayflag:"🇯🇵",city:"Kansas City",stadium:"Arrowhead Stadium",country:"USA",group:"I",ticketCat1:480,ticketCat2:230,ticketCat3:100,hype:"Samurai Blue vs Die Mannschaft",fanZone:"Power & Light Fan Zone"},
+  {id:10,date:"Sat Jun 20",time:"3:00 PM ET",home:"Portugal",away:"Mexico",homeflag:"🇵🇹",awayflag:"🇲🇽",city:"Philadelphia",stadium:"Lincoln Financial Field",country:"USA",group:"J",ticketCat1:580,ticketCat2:290,ticketCat3:130,hype:"Ronaldo in USA! ⭐",fanZone:"Penn's Landing Fan Festival"},
+  {id:11,date:"Sun Jun 21",time:"2:00 PM PT",home:"USA",away:"Portugal",homeflag:"🇺🇸",awayflag:"🇵🇹",city:"Seattle",stadium:"Lumen Field",country:"USA",group:"B",ticketCat1:590,ticketCat2:300,ticketCat3:135,hype:"USA vs Portugal!",fanZone:"Seattle Center Fan Zone"},
+  {id:12,date:"Mon Jun 22",time:"7:00 PM CT",home:"Mexico",away:"Uruguay",homeflag:"🇲🇽",awayflag:"🇺🇾",city:"Guadalajara",stadium:"Estadio Akron",country:"Mexico",group:"A",ticketCat1:430,ticketCat2:200,ticketCat3:90,hype:"El Tri on home turf! 🇲🇽",fanZone:"Centro Histórico Fan Park"},
+  {id:13,date:"Tue Jun 23",time:"4:00 PM ET",home:"Canada",away:"Germany",homeflag:"🇨🇦",awayflag:"🇩🇪",city:"Vancouver",stadium:"BC Place",country:"Canada",group:"C",ticketCat1:510,ticketCat2:250,ticketCat3:115,hype:"Canada vs the giants!",fanZone:"Jack Poole Plaza Fan Zone"},
+  {id:14,date:"Wed Jun 24",time:"6:00 PM CT",home:"Brazil",away:"South Korea",homeflag:"🇧🇷",awayflag:"🇰🇷",city:"Dallas",stadium:"AT&T Stadium",country:"USA",group:"D",ticketCat1:650,ticketCat2:340,ticketCat3:150,hype:"K-fans + Samba fans = 🔥",fanZone:"Victory Plaza Fan Zone"},
+  {id:15,date:"Thu Jun 25",time:"5:00 PM ET",home:"South Africa",away:"Argentina",homeflag:"🇿🇦",awayflag:"🇦🇷",city:"Miami",stadium:"Hard Rock Stadium",country:"USA",group:"E",ticketCat1:680,ticketCat2:360,ticketCat3:160,hype:"🌍 Africa vs Champions!",fanZone:"Bayfront Park Fan Fest"},
+  {id:16,date:"Fri Jun 26",time:"6:00 PM CT",home:"Mexico",away:"Poland",homeflag:"🇲🇽",awayflag:"🇵🇱",city:"Monterrey",stadium:"Estadio BBVA",country:"Mexico",group:"A",ticketCat1:400,ticketCat2:190,ticketCat3:85,hype:"Mexico must win! 🔥",fanZone:"Macroplaza Fan Park"},
+  {id:17,date:"Sat Jun 27",time:"3:00 PM ET",home:"USA",away:"Mexico",homeflag:"🇺🇸",awayflag:"🇲🇽",city:"Boston",stadium:"Gillette Stadium",country:"USA",group:"B",ticketCat1:820,ticketCat2:450,ticketCat3:200,hype:"⚡ THE rivalry game!",fanZone:"City Hall Plaza Fan Fest"},
+  {id:18,date:"Sun Jun 28",time:"5:00 PM ET",home:"Spain",away:"Morocco",homeflag:"🇪🇸",awayflag:"🇲🇦",city:"New York",stadium:"MetLife Stadium",country:"USA",group:"H",ticketCat1:600,ticketCat2:300,ticketCat3:135,hype:"🇲🇦 Atlas Lions vs La Roja!",fanZone:"Times Square Fan Fest"},
+];
+
+// =====================================================
+// 2. COST CONSTANTS
+// =====================================================
+const COSTS = {
+  hotel:{budget:{perNight:85,label:"Hostel/Budget Airbnb"},mid:{perNight:180,label:"3-Star Hotel"},luxury:{perNight:400,label:"4–5 Star Hotel"}},
+  food:{budget:{perDay:35,label:"Street food & supermarkets"},mid:{perDay:75,label:"Mix of restaurants"},luxury:{perDay:180,label:"Restaurants & dining out"}},
+  transport:{flight:{perLeg:220,label:"Domestic flights"},drive:{perLeg:65,label:"Car rental/gas"},train:{perLeg:95,label:"Train/bus"}},
+  ticket:{cat3:{price:150,label:"Cat 3 seats"},cat2:{price:290,label:"Cat 2 seats"},cat1:{price:590,label:"Cat 1 seats"}},
+  extras:{perDay:40,label:"Fan zones, merch, extras"},
+  knockout:{r16:{extra:800},qf:{extra:1200},sf:{extra:1800},final:{extra:3500}},
+};
+
+const ALL_TIPS = [
+  {icon:"🏨",title:"Book accommodation NOW",body:"2026 hotels near stadiums fill up fast. Booking 6–9 months early saves 40–60%.",savings:"$300–$600",category:"hotel"},
+  {icon:"✈️",title:"Fly into smaller nearby airports",body:"Newark instead of JFK, Long Beach instead of LAX — cuts airfare by $100–$200 per person.",savings:"$100–$400",category:"transport"},
+  {icon:"🚗",title:"Share a rental car with friends",body:"A 4-person road trip at ~$65/day split 4 ways = $16.25/person vs $85+ hotels.",savings:"$200–$500",category:"transport"},
+  {icon:"🍕",title:"Eat near stadiums early",body:"Street food trucks set up for match days. Fan zones have $8–$15 meals vs $35+ inside stadiums.",savings:"$120–$300",category:"food"},
+  {icon:"🎫",title:"Cat 3 tickets = same atmosphere",body:"Cat 3 ($100–$200) vs Cat 1 ($500–$800) — same electric atmosphere, huge savings.",savings:"$300–$1,200",category:"ticket"},
+  {icon:"📱",title:"Use free Fan Zones",body:"Each host city has FREE Fan Zones with big screens, live music, and food.",savings:"FREE",category:"general"},
+  {icon:"🏠",title:"Airbnb entire homes with your group",body:"A suburban house for 4–6 people is often 50% cheaper than downtown hotels.",savings:"$400–$900",category:"hotel"},
+  {icon:"🚆",title:"Amtrak Northeast Corridor",body:"NY + Boston + Philly? Amtrak rail pass ~$250 vs 3 flights at $150+ each.",savings:"$200–$400",category:"transport"},
+  {icon:"💳",title:"Get a travel credit card NOW",body:"Chase Sapphire/Capital One Venture sign-up bonuses = enough for a free flight to USA.",savings:"$400–$800",category:"general"},
+  {icon:"🌐",title:"Use SIM card vs roaming",body:"eSIM or T-Mobile prepaid ~$30 vs $10/day roaming over 2+ weeks.",savings:"$80–$200",category:"general"},
+];
+
+// =====================================================
+// 3. STATE
+// =====================================================
+let state = {selectedMatchIds:[],details:{},isPremium:false,selectedTier:'basic',currentPlan:null};
+
+// =====================================================
+// 4. PAGE ROUTING
+// =====================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.style.display='none');
+  document.getElementById('page-'+name).style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='myplans') renderSavedPlans();
+  if(name==='schedule') renderSchedulePage();
+  if(name==='tips') renderTipsPage();
+}
+function toggleMobileMenu() {
+  document.getElementById('mobile-menu').classList.toggle('hidden');
+}
+
+// =====================================================
+// 5. MATCH SELECTOR
+// =====================================================
+function renderMatches(filteredMatches) {
+  const grid = document.getElementById('match-grid');
+  const matches = filteredMatches || MATCHES;
+  grid.innerHTML = matches.map(m => {
+    const sel = state.selectedMatchIds.includes(m.id);
+    return `<div class="match-card p-4 ${sel?'selected':''}" data-id="${m.id}">
+      <div class="check-badge">✓</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="badge badge-green" style="font-size:10px;">Group ${m.group}</span>
+        <span style="font-size:11px;color:var(--premium);">${m.hype}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0;">
+        <div style="text-align:center;flex:1;"><div style="font-size:24px;">${m.homeflag}</div><div style="font-size:13px;font-weight:500;margin-top:4px;">${m.home}</div></div>
+        <div style="font-size:16px;color:var(--muted);font-weight:700;">vs</div>
+        <div style="text-align:center;flex:1;"><div style="font-size:24px;">${m.awayflag}</div><div style="font-size:13px;font-weight:500;margin-top:4px;">${m.away}</div></div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:8px;">
+        <div style="font-size:11px;color:var(--muted);">📅 ${m.date} · ${m.time}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">🏟️ ${m.stadium}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">📍 ${m.city}, ${m.country}</div>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--muted);">Cat 2 ticket</span>
+        <span class="badge badge-gold" style="font-size:10px;">~$${m.ticketCat2}</span>
+      </div>
+    </div>`;
+  }).join('');
+  updateMatchSummary();
+}
+
+function toggleMatch(id) {
+  const idx = state.selectedMatchIds.indexOf(id);
+  if(idx > -1) {
+    state.selectedMatchIds.splice(idx,1);
+  } else {
+    if(!state.isPremium && state.selectedMatchIds.length >= 3) {
+      showToast("⚠️ Free plan: max 3 matches. Unlock Premium for unlimited!","amber");
+      return;
+    }
+    state.selectedMatchIds.push(id);
+  }
+  renderMatches(getCurrentFilteredMatches());
+}
+
+function getCurrentFilteredMatches() {
+  const country = document.getElementById('filter-country').value;
+  const city = document.getElementById('filter-city').value;
+  return MATCHES.filter(m => {
+    const mc = (!country) || m.home===country || m.away===country;
+    const mv = (!city) || m.city===city;
+    return mc && mv;
+  });
+}
+function filterMatches() { renderMatches(getCurrentFilteredMatches()); }
+function clearMatchSelection() { state.selectedMatchIds=[]; renderMatches(getCurrentFilteredMatches()); }
+
+function updateMatchSummary() {
+  const count = state.selectedMatchIds.length;
+  const summary = document.getElementById('match-summary');
+  document.getElementById('selected-count').textContent = `${count} match${count!==1?'es':''} selected`;
+  document.getElementById('free-limit-warning').classList.toggle('hidden', state.isPremium || count < 3);
+  summary.style.display = count > 0 ? 'block' : 'none';
+  if(count > 0) markStep(1,'done'); else markStep(1,'active');
+}
+
+// =====================================================
+// 6. PLAN GENERATION
+// =====================================================
+function generatePlan() {
+  if(state.selectedMatchIds.length === 0) {
+    showToast("Please select at least one match first!","red");
+    scrollToEl('section-matches'); return;
+  }
+  state.details = {
+    name: document.getElementById('inp-name').value.trim() || "World Cup Fan",
+    home: document.getElementById('inp-home').value.trim() || "Your City",
+    travellers: parseInt(document.getElementById('inp-travellers').value),
+    budget: document.getElementById('inp-budget').value,
+    transport: document.getElementById('inp-transport').value,
+    ticket: document.getElementById('inp-ticket').value,
+    team: document.getElementById('inp-team').value,
+  };
+  markStep(2,'done'); markStep(3,'active');
+  const selectedMatches = MATCHES.filter(m => state.selectedMatchIds.includes(m.id)).sort((a,b)=>a.id-b.id);
+  const plan = buildPlan(selectedMatches, state.details);
+  state.currentPlan = plan;
+  renderPlanHeader(plan);
+  renderCostSummary(plan);
+  renderCostBreakdown(plan);
+  renderItinerary(plan, false);
+  renderWhatIf(plan);
+  renderSavingsTips(plan);
+  if(state.isPremium) renderPremiumContent(plan);
+  document.getElementById('section-results').style.display='block';
+  // Re-init PayPal buttons after results shown
+  setTimeout(() => { try { initPayPalButtons(); } catch(e){} }, 300);
+  scrollToEl('section-results');
+}
+
+// =====================================================
+// 7. COST CALCULATIONS
+// =====================================================
+function buildPlan(matches, d) {
+  const nights = matches.length * 2 + 1;
+  const legs = Math.max(matches.length - 1, 0);
+  const hotelCost = nights * COSTS.hotel[d.budget].perNight;
+  const foodCost = nights * COSTS.food[d.budget].perDay;
+  const transportCost = legs * COSTS.transport[d.transport].perLeg;
+  const extrasCost = nights * COSTS.extras.perDay;
+  const ticketCost = matches.length * COSTS.ticket[d.ticket].price;
+  const perPersonTotal = hotelCost + foodCost + transportCost + extrasCost + ticketCost;
+  const groupTotal = perPersonTotal * d.travellers;
+  return {
+    name: d.name, matches, details: d, nights,
+    perPersonTotal: Math.round(perPersonTotal),
+    groupTotal: Math.round(groupTotal),
+    intlFlight: 900,
+    savingsVsLastMinute: Math.round(perPersonTotal * 0.32),
+    breakdown: {
+      tickets:   {amount:Math.round(ticketCost),   label:"Match Tickets",   color:"gold",  icon:"🎫", pct:pct(ticketCost,perPersonTotal)},
+      hotel:     {amount:Math.round(hotelCost),    label:"Accommodation",   color:"green", icon:"🏨", pct:pct(hotelCost,perPersonTotal)},
+      food:      {amount:Math.round(foodCost),     label:"Food & Drinks",   color:"amber", icon:"🍕", pct:pct(foodCost,perPersonTotal)},
+      transport: {amount:Math.round(transportCost),label:"Local Transport", color:"red",   icon:"🚗", pct:pct(transportCost,perPersonTotal)},
+      extras:    {amount:Math.round(extrasCost),   label:"Fan Zones/Extras",color:"green", icon:"🎉", pct:pct(extrasCost,perPersonTotal)},
+    },
+    itinerary: buildItinerary(matches, d),
+    cities: [...new Set(matches.map(m => m.city))],
+  };
+}
+function pct(val,total){ return Math.round((val/total)*100); }
+
+// =====================================================
+// 8. ITINERARY BUILDER
+// =====================================================
+function buildItinerary(matches, d) {
+  const days = [];
+  matches.forEach((match, i) => {
+    days.push({dayNum:i*2+1,type:'travel',city:match.city,title:`Travel to ${match.city}`,
+      items:[`🌅 Morning: Depart for ${match.city} by ${d.transport==='flight'?'flight':d.transport==='train'?'train/bus':'road'}`,
+             `🏨 Afternoon: Check in — ${COSTS.hotel[d.budget].label} (~$${COSTS.hotel[d.budget].perNight}/night)`,
+             `🍕 Evening: Local food & drinks · ${COSTS.food[d.budget].label}`,
+             `📍 Fan Zone: ${match.fanZone} — free entry, big screens, live music`],
+      costEstimate: COSTS.hotel[d.budget].perNight + COSTS.food[d.budget].perDay + COSTS.transport[d.transport].perLeg});
+    days.push({dayNum:i*2+2,type:'matchday',city:match.city,match,title:`⚽ Match Day — ${match.home} vs ${match.away}`,
+      items:[`☀️ Morning: Fan zone opens 5h before kickoff`,
+             `🎫 Afternoon: Head to ${match.stadium} — gates open 3h early`,
+             `⚽ ${match.time}: KICKOFF — ${match.homeflag} ${match.home} vs ${match.away} ${match.awayflag}`,
+             `🎊 After match: Fan bars & post-match celebrations`],
+      costEstimate: COSTS.ticket[d.ticket].price + COSTS.food[d.budget].perDay*1.5 + COSTS.extras.perDay});
+  });
+  days.push({dayNum:days.length+1,type:'departure',city:matches[matches.length-1]?.city||'USA',title:'🏠 Return Home',
+    items:['🧳 Pack your souvenirs','🍳 Farewell breakfast','✈️ Head to airport','📸 Post your best moments!'],
+    costEstimate: COSTS.food[d.details?d.details.budget:d.budget]?.perDay || 75});
+  return days;
+}
+
+function renderPlanHeader(plan) {
+  document.getElementById('plan-title').textContent = `${plan.name}'s World Cup 2026 Plan`;
+  document.getElementById('plan-subtitle').textContent = `${plan.matches.length} match${plan.matches.length>1?'es':''} · ${plan.nights} nights · ${plan.cities.join(' → ')}`;
+}
+
+function renderCostSummary(plan) {
+  document.getElementById('cost-summary').innerHTML = [
+    {icon:"💰",label:"Total Per Person",value:`$${plan.perPersonTotal.toLocaleString()}`,sub:"excl. int'l flight"},
+    {icon:"👥",label:`Group Total (${plan.details.travellers} ppl)`,value:`$${plan.groupTotal.toLocaleString()}`,sub:"All local costs"},
+    {icon:"✈️",label:"Int'l Flight (est.)",value:`~$${plan.intlFlight}`,sub:"Book early!"},
+    {icon:"💡",label:"Book Early & Save",value:`~$${plan.savingsVsLastMinute}`,sub:"vs last-minute"},
+  ].map(c=>`<div class="card p-4 text-center"><div style="font-size:28px;margin-bottom:4px;">${c.icon}</div><div class="text-xs mb-1" style="color:var(--muted);">${c.label}</div><div class="font-display text-2xl" style="color:var(--green);">${c.value}</div><div class="text-xs mt-1" style="color:var(--muted);">${c.sub}</div></div>`).join('');
+}
+
+function renderCostBreakdown(plan) {
+  document.getElementById('cost-breakdown').innerHTML = Object.values(plan.breakdown).map(b=>`
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:14px;font-weight:500;">${b.icon} ${b.label}</span>
+        <span style="font-size:14px;font-weight:500;color:var(--green);">$${b.amount.toLocaleString()} <span style="color:var(--muted);font-size:11px;">(${b.pct}%)</span></span>
+      </div>
+      <div class="cost-bar-wrap"><div class="cost-bar ${b.color}" style="width:${b.pct}%"></div></div>
+    </div>`).join('');
+}
+
+function renderItinerary(plan, isPremium) {
+  const el = document.getElementById('itinerary-list');
+  const note = document.getElementById('itinerary-limit-note');
+  const days = isPremium ? plan.itinerary : plan.itinerary.slice(0,6);
+  const isLimited = !isPremium && plan.itinerary.length > 6;
+  note.classList.toggle('hidden',!isLimited);
+  el.innerHTML = days.map(day=>`
+    <div style="border-radius:12px;padding:16px;${day.type==='matchday'?'border:1px solid var(--green);background:rgba(34,197,94,0.04);':'background:var(--surface2);'}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span class="badge ${day.type==='matchday'?'badge-green':day.type==='departure'?'badge-blue':'badge-amber'}" style="font-size:10px;margin-right:6px;">Day ${day.dayNum}</span>
+          <span style="font-weight:500;">${day.title}</span>
+        </div>
+        <span style="font-size:12px;font-weight:500;color:var(--green);">~$${day.costEstimate.toLocaleString()}/person</span>
+      </div>
+      <ul style="padding-left:8px;">${day.items.map(item=>`<li style="font-size:13px;color:var(--muted);margin-bottom:3px;">${item}</li>`).join('')}</ul>
+      ${day.type==='matchday'&&day.match?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;"><span class="badge badge-gold" style="font-size:10px;">🏟️ ${day.match.stadium}</span><span class="badge badge-blue" style="font-size:10px;">📍 ${day.match.fanZone}</span></div>`:''}
+    </div>`).join('');
+  if(isLimited) el.innerHTML += `<div style="border-radius:12px;padding:16px;text-align:center;background:var(--surface2);filter:blur(3px);"><p style="color:var(--muted);">🔒 ${plan.itinerary.length-6} more days in your Premium plan...</p></div>`;
+}
+
+// =====================================================
+// 9. WHAT-IF SIMULATOR
+// =====================================================
+function renderWhatIf(plan) {
+  const el = document.getElementById('whatif-content');
+  const team = plan.details.team;
+  if(!team) { el.innerHTML=`<p style="color:var(--muted);">Select a favourite team in step 2 to run the simulator.</p>`; return; }
+  const roundLabels = {r16:'Round of 16',qf:'Quarter-Final',sf:'Semi-Final',final:'🏆 FINAL'};
+  let cumulative = plan.perPersonTotal;
+  let html = `<p style="font-size:13px;color:var(--muted);margin-bottom:16px;">If <strong>${team}</strong> advances, here's the extra cost per person:</p><div style="display:flex;flex-direction:column;gap:12px;">`;
+  ['r16','qf','sf','final'].forEach(r => {
+    const extra = COSTS.knockout[r].extra;
+    cumulative += extra;
+    html += `<div style="border-radius:12px;padding:16px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:var(--surface2);${!state.isPremium?'filter:blur(3px);':''}">
+      <div style="flex:1;"><div style="font-weight:500;">${roundLabels[r]}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Extra tickets + travel + accommodation</div></div>
+      <div style="text-align:right;"><div style="font-size:13px;color:var(--premium);">+$${extra.toLocaleString()}/person</div><div style="font-size:11px;color:var(--muted);">Running total: ~$${cumulative.toLocaleString()}</div></div>
+    </div>`;
+  });
+  html += `</div>`;
+  if(!state.isPremium) html += `<div style="text-align:center;margin-top:16px;"><span class="badge badge-amber">🔒 Unlock Premium to see full simulator</span></div>`;
+  el.innerHTML = html;
+  document.getElementById('whatif-premium-badge').classList.toggle('hidden', state.isPremium);
+}
+
+// =====================================================
+// 10. SAVINGS TIPS
+// =====================================================
+function renderSavingsTips(plan) {
+  const relevant = ALL_TIPS.filter(t => t.category==='general' || t.category===plan.details.budget || t.category===plan.details.transport).slice(0, state.isPremium?8:4);
+  document.getElementById('savings-tips').innerHTML = relevant.map(t=>`
+    <div style="border-radius:12px;padding:16px;background:var(--surface2);">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <span style="font-size:24px;">${t.icon}</span>
+        <div style="flex:1;">
+          <div style="font-weight:500;font-size:13px;">${t.title}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">${t.body}</div>
+          <span class="badge badge-green" style="font-size:10px;margin-top:8px;">💰 Save: ${t.savings}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// =====================================================
+// 11. PREMIUM UNLOCK / PAYPAL
+// =====================================================
+function selectTier(tier) {
+  state.selectedTier = tier;
+  document.getElementById('tier-basic').style.borderColor = tier==='basic' ? 'var(--premium)' : 'var(--border)';
+  document.getElementById('tier-pro').style.borderColor   = tier==='pro'   ? 'var(--gold)'    : 'var(--border)';
+  showToast(tier==='basic' ? '✅ Single Trip ($9.99) selected' : '✅ Pro Unlimited ($14.99) selected','green');
+}
+
+let paypalInitialized = false;
+function initPayPalButtons() {
+  if(typeof paypal === 'undefined' || paypalInitialized) return;
+  const container = document.getElementById('paypal-button-container');
+  if(!container) return;
+  paypalInitialized = true;
+  paypal.Buttons({
+    createOrder: (data, actions) => {
+      const amount = state.selectedTier === 'pro' ? '14.99' : '9.99';
+      return actions.order.create({
+        purchase_units:[{description:`WC Trip Pro — ${state.selectedTier==='pro'?'Pro Unlimited':'Single Trip'} Premium`,amount:{value:amount}}]
+      });
+    },
+    onApprove: (data, actions) => {
+      return actions.order.capture().then(details => {
+        showToast("🎉 Payment successful! Unlocking Premium...","green");
+        unlockPremium();
+      });
+    },
+    onError: (err) => {
+      console.error('PayPal Error:',err);
+      showToast("Payment failed. Please try again.","red");
+    }
+  }).render('#paypal-button-container');
+}
+
+function simulatePremiumUnlock() {
+  showToast("🎉 Demo: Premium unlocked!","green");
+  unlockPremium();
+}
+
+function unlockPremium() {
+  state.isPremium = true;
+  document.getElementById('premium-upsell').style.display='none';
+  document.getElementById('nav-premium-badge').classList.remove('hidden');
+  if(state.currentPlan) {
+    renderItinerary(state.currentPlan, true);
+    renderWhatIf(state.currentPlan);
+    renderSavingsTips(state.currentPlan);
+    renderPremiumContent(state.currentPlan);
+    document.getElementById('premium-content').style.display='block';
+  }
+  document.getElementById('btn-share').classList.remove('hidden');
+  localStorage.setItem('wc_trip_pro_premium','1');
+}
+
+function renderPremiumContent(plan) {
+  if(!state.isPremium) return;
+  document.getElementById('premium-itinerary').innerHTML = plan.itinerary.map(day=>`
+    <div style="border-radius:12px;padding:16px;${day.type==='matchday'?'border:1px solid var(--green);background:rgba(34,197,94,0.04);':'background:var(--surface2);'}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+        <div><span class="badge ${day.type==='matchday'?'badge-green':day.type==='departure'?'badge-blue':'badge-amber'}" style="font-size:10px;margin-right:6px;">Day ${day.dayNum}</span><span style="font-weight:500;">${day.title}</span></div>
+        <span style="font-size:12px;color:var(--green);">~$${day.costEstimate}/person</span>
+      </div>
+      <ul style="padding-left:8px;">${day.items.map(i=>`<li style="font-size:13px;color:var(--muted);margin-bottom:3px;">${i}</li>`).join('')}</ul>
+    </div>`).join('');
+  const packItems=["⚽ Team jersey","👟 Comfortable sneakers","🧢 Sun hat/cap","🕶️ Sunglasses","🎒 Day backpack","🔋 Portable charger","💊 Basic medicine kit","💳 Travel credit card","📱 eSIM or local SIM","🌂 Compact umbrella","📷 Camera","🎺 Mini vuvuzela","💧 Reusable water bottle","🗓️ Printed match tickets","🏨 Hotel confirmations","🩺 Travel insurance docs","🔌 Power adapter (110V)","🪪 Passport + copies"];
+  document.getElementById('packing-list').innerHTML = packItems.map(item=>`
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;border-radius:8px;padding:8px 12px;background:var(--surface2);">
+      <input type="checkbox" style="width:16px;height:16px;accent-color:var(--green);" /><span>${item}</span>
+    </label>`).join('');
+}
+
+// =====================================================
+// 12. PDF EXPORT
+// =====================================================
+function exportPDF() {
+  if(!state.isPremium){showToast("Unlock Premium to export PDF!","amber");return;}
+  if(!state.currentPlan){showToast("Generate a plan first!","red");return;}
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const plan = state.currentPlan;
+  let y = 20;
+  const green=[34,197,94],gold=[245,197,24],dark=[10,15,13],gray=[138,158,140];
+  doc.setFillColor(...dark); doc.rect(0,0,210,297,'F');
+  doc.setFillColor(...green); doc.rect(0,0,210,18,'F');
+  doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(...dark);
+  doc.text('WC TRIP PRO - World Cup 2026 Plan',20,12);
+  y=28;
+  doc.setFontSize(18);doc.setFont('helvetica','bold');doc.setTextColor(...green);
+  doc.text(`${plan.name}'s World Cup 2026 Trip`,20,y); y+=8;
+  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(...gray);
+  doc.text(`${plan.matches.length} matches · ${plan.nights} nights · ${plan.cities.join(' > ')}`,20,y); y+=10;
+  doc.setDrawColor(...green);doc.setLineWidth(0.5);doc.line(20,y,190,y); y+=8;
+  doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(...gold);
+  doc.text('COST SUMMARY (per person)',20,y); y+=7;
+  [['Match Tickets',`$${plan.breakdown.tickets.amount.toLocaleString()}`],
+   ['Accommodation',`$${plan.breakdown.hotel.amount.toLocaleString()}`],
+   ['Food & Drinks',`$${plan.breakdown.food.amount.toLocaleString()}`],
+   ['Local Transport',`$${plan.breakdown.transport.amount.toLocaleString()}`],
+   ['Fan Zones/Extras',`$${plan.breakdown.extras.amount.toLocaleString()}`],
+   ['TOTAL PER PERSON',`$${plan.perPersonTotal.toLocaleString()}`],
+   [`GROUP TOTAL (${plan.details.travellers} ppl)`,`$${plan.groupTotal.toLocaleString()}`]
+  ].forEach(([label,val])=>{
+    const isTot = label.startsWith('TOTAL')||label.startsWith('GROUP');
+    doc.setFontSize(10);doc.setFont('helvetica',isTot?'bold':'normal');
+    doc.setTextColor(230,237,233);doc.text(label,22,y);
+    doc.setTextColor(...(isTot?green:gray));doc.text(val,150,y,{align:'right'}); y+=6;
+  });
+  y+=4;doc.setDrawColor(...green);doc.line(20,y,190,y);y+=8;
+  doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(...gold);
+  doc.text('MATCH SCHEDULE',20,y);y+=7;
+  plan.matches.forEach(m=>{
+    if(y>265){doc.addPage();doc.setFillColor(...dark);doc.rect(0,0,210,297,'F');y=20;}
+    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(...green);
+    doc.text(`${m.home} vs ${m.away}`,22,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(...gray);
+    doc.text(`${m.date} | ${m.stadium}, ${m.city} | ${m.time}`,22,y+5);y+=12;
+  });
+  doc.setFontSize(8);doc.setTextColor(...gray);
+  doc.text(`Generated by WC Trip Pro · ${new Date().toLocaleDateString()}`,20,290);
+  doc.save(`WCTrip_${plan.name.replace(/\s+/g,'_')}_2026.pdf`);
+  showToast("📄 PDF downloaded!","green");
+}
+
+// =====================================================
+// 13. SAVED PLANS
+// =====================================================
+function savePlan() {
+  if(!state.currentPlan) return;
+  const saved = JSON.parse(localStorage.getItem('wc_saved_plans')||'[]');
+  if(!state.isPremium && saved.length >= 1){showToast("Free: 1 saved plan max. Upgrade for unlimited.","amber");return;}
+  saved.push({id:Date.now(),name:state.currentPlan.name,matches:state.currentPlan.matches.length,cities:state.currentPlan.cities,nights:state.currentPlan.nights,totalCost:state.currentPlan.perPersonTotal,savedAt:new Date().toLocaleDateString(),details:state.details,matchIds:state.selectedMatchIds,isPremium:state.isPremium});
+  localStorage.setItem('wc_saved_plans',JSON.stringify(saved));
+  showToast("💾 Plan saved to My Plans!","green");
+}
+
+function renderSavedPlans() {
+  const saved = JSON.parse(localStorage.getItem('wc_saved_plans')||'[]');
+  const el = document.getElementById('saved-plans-list');
+  const noMsg = document.getElementById('no-plans-msg');
+  if(saved.length===0){el.innerHTML='';noMsg.style.display='block';return;}
+  noMsg.style.display='none';
+  el.innerHTML = saved.map(p=>`
+    <div class="card p-5">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div>
+          <div class="font-display-md" style="font-size:18px;">${p.name}'s Plan</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">${p.matches} matches · ${p.nights} nights · ${(p.cities||[]).join(' → ')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Saved: ${p.savedAt}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="badge badge-green">$${p.totalCost?.toLocaleString()}/person</span>
+          ${p.isPremium?'<span class="badge badge-amber">⭐ Premium</span>':''}
+          <button onclick="deleteSavedPlan(${p.id})" class="btn-ghost" style="font-size:12px;padding:6px 12px;color:var(--red);border-color:var(--red);">🗑️</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;"><button onclick="loadSavedPlan(${p.id})" class="btn-primary" style="font-size:13px;">🔄 Load This Plan</button></div>
+    </div>`).join('');
+}
+
+function deleteSavedPlan(id) {
+  let saved = JSON.parse(localStorage.getItem('wc_saved_plans')||'[]');
+  localStorage.setItem('wc_saved_plans',JSON.stringify(saved.filter(p=>p.id!==id)));
+  renderSavedPlans(); showToast("Plan deleted.","red");
+}
+
+function loadSavedPlan(id) {
+  const p = JSON.parse(localStorage.getItem('wc_saved_plans')||'[]').find(x=>x.id===id);
+  if(!p) return;
+  state.selectedMatchIds = p.matchIds||[];
+  state.details = p.details||{};
+  state.isPremium = p.isPremium||false;
+  if(p.details){
+    document.getElementById('inp-name').value = p.details.name||'';
+    document.getElementById('inp-home').value = p.details.home||'';
+    document.getElementById('inp-travellers').value = p.details.travellers||2;
+    document.getElementById('inp-budget').value = p.details.budget||'mid';
+    document.getElementById('inp-transport').value = p.details.transport||'drive';
+    document.getElementById('inp-ticket').value = p.details.ticket||'cat2';
+    document.getElementById('inp-team').value = p.details.team||'';
+  }
+  showPage('home'); renderMatches(); generatePlan();
+  showToast("✅ Plan loaded!","green");
+}
+
+// =====================================================
+// 14. SCHEDULE PAGE
+// =====================================================
+function renderSchedulePage() {
+  document.getElementById('full-schedule').innerHTML = MATCHES.map(m=>`
+    <div class="card p-4" style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;">
+      <div style="flex-shrink:0;text-align:center;width:80px;">
+        <div style="font-size:11px;color:var(--muted);">${m.date}</div>
+        <span class="badge badge-green" style="font-size:10px;margin-top:4px;">Group ${m.group}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;flex:1;justify-content:center;">
+        <div style="text-align:center;"><div style="font-size:24px;">${m.homeflag}</div><div style="font-size:13px;font-weight:500;">${m.home}</div></div>
+        <div style="font-weight:700;color:var(--muted);">vs</div>
+        <div style="text-align:center;"><div style="font-size:24px;">${m.awayflag}</div><div style="font-size:13px;font-weight:500;">${m.away}</div></div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:13px;font-weight:500;">${m.city}</div>
+        <div style="font-size:11px;color:var(--muted);">${m.stadium}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${m.time}</div>
+      </div>
+      <span class="badge badge-amber" style="font-size:10px;">Cat2: ~$${m.ticketCat2}</span>
+    </div>`).join('');
+}
+
+// =====================================================
+// 15. TIPS PAGE
+// =====================================================
+function renderTipsPage() {
+  document.getElementById('tips-content').innerHTML = ALL_TIPS.map(t=>`
+    <div class="card p-5">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <span style="font-size:32px;">${t.icon}</span>
+        <div style="flex:1;">
+          <div class="font-display-md" style="font-size:18px;margin-bottom:4px;">${t.title}</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">${t.body}</p>
+          <span class="badge badge-green">💰 Potential savings: ${t.savings}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// =====================================================
+// 16. UI HELPERS
+// =====================================================
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('theme-icon').textContent = isDark?'🌙':'☀️';
+  localStorage.setItem('wc_theme',isDark?'light':'dark');
+}
+
+function markStep(n, st) {
+  const el = document.getElementById('step'+n);
+  el.className = 'step-dot '+st;
+  if(st==='done') el.textContent='✓';
+  if(n<3) document.getElementById('line'+n).className='step-line'+(st==='done'?' done':'');
+}
+
+function scrollToEl(id) {
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.style.borderColor = {green:'var(--green)',amber:'var(--premium)',red:'var(--red)',blue:'#60a5fa'}[type]||'var(--green)';
+  toast.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.add('hidden'),3500);
+}
+
+function shareCard() {
+  if(!state.currentPlan) return;
+  const plan = state.currentPlan;
+  document.getElementById('share-card-content').innerHTML = `
+    <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#0a0f0d,#172010);border-radius:12px;">
+      <div style="font-size:40px;margin-bottom:8px;">⚽</div>
+      <div class="font-display" style="font-size:22px;color:var(--green);margin-bottom:4px;">${plan.name}'s WC 2026 Trip!</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${plan.matches.length} matches · ${plan.nights} nights</div>
+      <div style="font-size:13px;margin-bottom:8px;">📍 ${plan.cities.join(' → ')}</div>
+      <div class="font-display" style="font-size:20px;color:var(--gold);">~$${plan.perPersonTotal.toLocaleString()} per person</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:12px;">Planned with WC Trip Pro</div>
+    </div>`;
+  document.getElementById('share-modal').style.display='flex';
+}
+function closeShareModal(){ document.getElementById('share-modal').style.display='none'; }
+function copyShareLink(){
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    showToast("🔗 Link copied!","green"); closeShareModal();
+  });
+}
+
+// =====================================================
+// INIT
+// =====================================================
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('wc_theme')||'dark';
+  document.documentElement.setAttribute('data-theme',savedTheme);
+  document.getElementById('theme-icon').textContent = savedTheme==='dark'?'☀️':'🌙';
+
+  if(localStorage.getItem('wc_trip_pro_premium')==='1') {
+    state.isPremium=true;
+    document.getElementById('nav-premium-badge').classList.remove('hidden');
+  }
+
+  renderMatches();
+
+  // Event delegation for match cards
+  document.getElementById('match-grid').addEventListener('click', function(e) {
+    const card = e.target.closest('.match-card');
+    if(!card) return;
+    const id = parseInt(card.getAttribute('data-id'));
+    if(!isNaN(id)) toggleMatch(id);
+  });
+
+  try { initPayPalButtons(); } catch(e) {}
+
+  showPage('home');
+});
+</script>
+</body>
+</html>
